@@ -6,7 +6,7 @@ require("dotenv").config();
 const app = express();
 const port = 3000;
 
-// middleware
+// middleware  DB_USER = "midistie"   DB_PASS = "oE4lyq3S9Cze3Me8"
 app.use(cors());
 app.use(express.json());
 
