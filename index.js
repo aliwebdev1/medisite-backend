@@ -25,9 +25,18 @@ async function bootstrap() {
     await client.connect();
     const database = client.db("Midisite");
     const usersCollection = database.collection("Users");
+    const appointmentsCollection = database.collection("Services");
     const bookingCollection = database.collection("Bookings");
 
     // bookings
+
+    app.get('/bookings', async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const result = await bookingCollection.find(query).toArray();
+      res.send(result)
+    })
+
     app.post("/bookings", async (req, res) => {
       const booking = req.body;
       console.log(booking);
@@ -45,11 +54,39 @@ async function bootstrap() {
       res.send(result);
     });
 
+
+    //service 
+    app.get('/appointmentOptions', async (req, res) => {
+      const date = req.query.date;
+      const query = {};
+      const options = await appointmentsCollection.find(query).toArray();
+
+      const bookingQuery = { appointmentDate: date };
+      const alreadyBooked = await bookingCollection.find(bookingQuery).toArray();
+
+      options.forEach(option => {
+        const optionBooked = alreadyBooked.filter(book => book.service === option.name);
+        const bookedSlots = optionBooked.map(book => book.slot);
+        const remainingSlots = option.slots.filter(slot => !bookedSlots.includes(slot))
+        option.slots = remainingSlots
+      })
+      res.send(options)
+    })
+
     app.post("/users", async (req, res) => {
       const user = req.body;
       const result = await usersCollection.insertOne(user);
       res.send(result);
     });
+
+    app.get('/users', async (req, res) => {
+      const query = {};
+      const result = await usersCollection.find(query).toArray();
+      res.send(result)
+    })
+
+
+
   } finally {
     // await client.close();
   }
